@@ -102,7 +102,7 @@ if api_key:
         question_answer_chain=create_stuff_documents_chain(llm,qa_prompt)
         rag_chain=create_retrieval_chain(history_aware_retriever,question_answer_chain)
 
-        def get_session_history(session:str)->BaseChatMessageHistory:
+        def get_session_history(session_id:str)->BaseChatMessageHistory:
             if session_id not in st.session_state.store:
                 st.session_state.store[session_id]=ChatMessageHistory()
             return st.session_state.store[session_id]
