@@ -129,7 +129,7 @@ else:
 if st.sidebar.button("🗑️ Clear Chat History"):
     if "store" in st.session_state:
         del st.session_state.store
-        del vectorstore
+        del retriever
     st.rerun() 
 
 
