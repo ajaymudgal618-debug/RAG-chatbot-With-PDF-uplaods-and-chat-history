@@ -12,6 +12,7 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
+from langchain_community.vectorstores import FAISS
 import os
  
 from dotenv import load_dotenv
@@ -71,7 +72,7 @@ if api_key:
             splits = text_splitter.split_documents(documents)
  
             ## ✅ Save vectorstore in session_state
-            st.session_state.vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
+            st.session_state.vectorstore = FAISS.from_documents(documents=splits, embedding=embeddings)
             st.success(f"✅ Loaded {len(current_file_names)} file(s): {', '.join(current_file_names)}")
  
         ## Use vectorstore from session_state
