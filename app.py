@@ -1,4 +1,4 @@
-## RAG Q&A Conversation With PDF Including Chat History
+
 import streamlit as st
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
@@ -15,12 +15,13 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_chroma import Chroma
 import os
 
-
 from dotenv import load_dotenv
 load_dotenv()
 
 os.environ['HF_TOKEN']=os.getenv("HF_TOKEN")
 embeddings=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+st.sidebar.write("settings")
 
 
 
@@ -28,7 +29,7 @@ st.title("Conversational RAG With PDF uplaods and chat history")                
 st.write("Upload Pdf's and chat with their content")
 
 ## Input the Groq API Key
-api_key=st.text_input("Enter your Groq API key:",type="password")
+api_key=st.sidebar.text_input("Enter your Groq API key:",type="password")
 
 ## Check if groq api key is provided
 if api_key:
@@ -37,6 +38,7 @@ if api_key:
     ## chat interface
 
     session_id=st.text_input("Session ID",value="default_session")
+
     ## statefully manage chat history
 
     if 'store' not in st.session_state:
@@ -61,13 +63,13 @@ if api_key:
         splits = text_splitter.split_documents(documents)
         vectorstore = Chroma.from_documents(documents=splits, embedding=embeddings)
         retriever = vectorstore.as_retriever()    
+##--------------------------------------------------------------------------------------------------------------------------------------------------------------
+        contextualize_q_system_prompt=(                                                     # creating a history aware retreiver
+            "Take the chat history and the user's latest question. "
+            "If the question refers to earlier context, rewrite it so it is clear on its own. "
+            "Do not answer the question. "
+            "If the question is already clear, just return it as is."
 
-        contextualize_q_system_prompt=(
-            "Given a chat history and the latest user question"
-            "which might reference context in the chat history, "
-            "formulate a standalone question which can be understood "
-            "without the chat history. Do NOT answer the question, "
-            "just reformulate it if needed and otherwise return it as is."
         )
         contextualize_q_prompt = ChatPromptTemplate.from_messages(
                 [
@@ -78,8 +80,6 @@ if api_key:
             )
         
         history_aware_retriever=create_history_aware_retriever(llm,retriever,contextualize_q_prompt)
-
-        ## Answer question
 
         # Answer question
         system_prompt = (
@@ -118,16 +118,18 @@ if api_key:
         if user_input:
             session_history=get_session_history(session_id)
             response = conversational_rag_chain.invoke(  {"input": user_input},
-                config={ "configurable": {"session_id":session_id}  },  # constructs a key "abc123" in `store`.
+                       config={ "configurable": {"session_id":session_id}  },  # constructs a key "abc123" in `store`.
                                                       )
             
-            st.write(st.session_state.store)
             st.write("Assistant:", response['answer'])
             st.write("Chat History:", session_history.messages)
 else:
     st.warning("Please enter the GRoq API Key")
 
-
+if st.sidebar.button("🗑️ Clear Chat History"):
+    if "store" in st.session_state:
+        del st.session_state.store
+    st.rerun() 
 
 
 
